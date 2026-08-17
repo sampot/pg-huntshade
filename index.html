@@ -1,41 +1,113 @@
 <!doctype html>
-<html lang="zh-Hant" data-game="pg-huntshade">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0a1114" />
-  <meta name="description" content="選擇獵人或匿者，在八乘八巷弄裡搜尋視野外的對手，與 AI 鬥智。" />
-  <title>獵影八巷</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="ambience" aria-hidden="true"><i></i><i></i><i></i></div>
-  <main>
-    <header class="topbar">
-      <div><p class="eyebrow">ASYMMETRIC NIGHT GRID</p><h1>獵影八巷</h1></div>
-      <button id="sound" class="quiet" type="button" aria-pressed="false">音樂：關</button>
-    </header>
-    <section id="lobby" class="lobby panel">
-      <div class="seal" aria-hidden="true">◐</div>
-      <p>選擇獵人或匿者，在八乘八巷弄裡搜尋視野外的對手，與 AI 鬥智。</p>
-      <div class="record"><span>場域最佳</span><strong id="best">0</strong></div>
-      <button id="start" class="primary" type="button">開始遊戲</button>
-    </section>
-    <section id="game" hidden>
-      <div id="hud" class="hud" aria-label="遊戲狀態"></div>
-      <section class="stage panel">
-        <div id="board" class="board" aria-label="遊戲場景"></div>
-        <div class="progress" aria-hidden="true"><i id="progress"></i></div>
-      </section>
-      <p id="message" class="message" role="status" aria-live="polite"></p>
-      <section id="details" class="details panel"></section>
-      <div id="actions" class="actions"></div>
-    </section>
-    <footer><button id="help" class="text-button" type="button">玩法</button><a href="./ATTRIBUTION.md">素材署名</a></footer>
-  </main>
-  <section id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-    <div class="sheet-card"><p class="eyebrow">ASYMMETRIC NIGHT GRID</p><h2 id="sheet-title">玩法</h2><div id="sheet-body"></div><button id="sheet-close" class="primary" type="button">知道了</button></div>
-  </section>
-  <script type="module" src="./app.js"></script>
-</body>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="追匿——選擇追捕或逃亡，在迷霧巷弄中與 AI 鬥智。" />
+    <title>追匿</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="hud">
+        <div class="hud-left">
+          <span class="tag" id="hudRole">追捕</span>
+          <span class="tag ghost" id="hudTime">1:30</span>
+          <span class="tag" id="hudLeft">匿 3/3</span>
+        </div>
+        <div class="hud-right">
+          <span class="score" id="hudScore">0</span>
+          <button type="button" id="btnSound" class="chip" aria-pressed="true">♪</button>
+          <button type="button" id="btnPause" class="chip">‖</button>
+        </div>
+      </header>
+
+      <main id="stageWrap">
+        <canvas id="stage" aria-label="追匿巷弄"></canvas>
+        <p id="banner" class="banner" role="status" aria-live="polite"></p>
+
+        <div id="touch">
+          <div id="stick" class="stick-zone">
+            <div id="stickRest"><span>拖曳<br />移動</span></div>
+            <div id="stickBase" hidden><i id="stickKnob"></i></div>
+          </div>
+          <button type="button" id="btnSkill" class="skill-btn">技能</button>
+        </div>
+      </main>
+
+      <div id="overlay">
+        <section class="panel" id="panelLobby">
+          <h1>追匿</h1>
+          <p class="lede">一獵對三匿。選擇追捕或逃亡，在迷霧巷弄裡撐到終點或抓完對手。</p>
+          <dl class="stats">
+            <div><dt>最高分</dt><dd id="lobbyBest">0</dd></div>
+            <div><dt>獵勝</dt><dd id="lobbyHunter">0</dd></div>
+            <div><dt>匿勝</dt><dd id="lobbyRunner">0</dd></div>
+          </dl>
+          <fieldset class="pick">
+            <legend>扮演</legend>
+            <label><input type="radio" name="role" value="hunter" checked /> 追捕者</label>
+            <label><input type="radio" name="role" value="runner" /> 逃亡者</label>
+          </fieldset>
+          <label class="pick">
+            難度
+            <select id="pickDiff">
+              <option value="easy">巷弄</option>
+              <option value="normal" selected>迷霧</option>
+              <option value="hard">夜巡</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button type="button" class="primary" id="btnStart">開始</button>
+            <button type="button" id="btnHelp">操作</button>
+            <button type="button" id="btnCredits">署名</button>
+          </div>
+        </section>
+
+        <section class="panel" id="panelHelp" hidden>
+          <h2>操作</h2>
+          <ul class="keys">
+            <li><b>手機</b>左下拖曳移動；右下<b>技能</b>——追捕＝掃描全圖；逃亡＝影遁衝刺。</li>
+            <li><b>鍵盤</b>WASD／方向鍵移動；<kbd>K</kbd>／<kbd>X</kbd>／<kbd>Shift</kbd> 技能。</li>
+            <li><b>追捕</b>90 秒內抓完三名匿者即勝；掃描可短暫看見所有對手。</li>
+            <li><b>逃亡</b>撐到時間結束，或踩<b>綠色出口</b>脫身即勝；衝刺時獵人視野看不到你。</li>
+          </ul>
+          <button type="button" class="primary" id="btnHelpClose">知道了</button>
+        </section>
+
+        <section class="panel" id="panelCredits" hidden>
+          <h2>素材署名</h2>
+          <p>美術 Kenney Toon Characters（CC0）；音效 Kenney UI／Sci-fi／Impact；音樂 Not Jam — Descend Gameplay。</p>
+          <p><a href="./ATTRIBUTION.md">完整 ATTRIBUTION.md</a></p>
+          <button type="button" class="primary" id="btnCreditsClose">關閉</button>
+        </section>
+
+        <section class="panel" id="panelPause" hidden>
+          <h2>暫停</h2>
+          <div class="actions">
+            <button type="button" class="primary" id="btnResume">繼續</button>
+            <button type="button" id="btnQuit">返回選單</button>
+          </div>
+        </section>
+
+        <section class="panel" id="panelResult" hidden>
+          <h2 id="resultTitle">結果</h2>
+          <p id="resultMsg"></p>
+          <dl class="stats">
+            <div><dt>得分</dt><dd id="resultScore">0</dd></div>
+            <div><dt>逮捕</dt><dd id="resultCatches">0</dd></div>
+            <div><dt>脫逃</dt><dd id="resultEscapes">0</dd></div>
+          </dl>
+          <div class="actions">
+            <button type="button" class="primary" id="btnAgain">再來一局</button>
+            <button type="button" id="btnMenu">選單</button>
+          </div>
+        </section>
+      </div>
+
+      <p id="toast" class="toast" hidden role="status"></p>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
 </html>
